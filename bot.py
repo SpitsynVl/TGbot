@@ -4,14 +4,12 @@ import logging
 import keyboards as kb
 import messages as msgs
 import calls_to_data as data
-from CLI import Quote
+
 
 
 bot = Bot(token='5159766100:AAGcbFAXDIuYzaiJVFfDgmoYYV9orNYUdj8')
 dp = Dispatcher(bot, storage=MemoryStorage())
-quote = Quote('data_model/big_data.csv', 'data_model/pure_q_35k.csv', 
-              'data_model/d2v_35k_exp.model')
-quote.Q_NUMBER = 5
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -44,11 +42,7 @@ async def get_topic(message: types.Message):
 
 @dp.message_handler(state='get_topic')
 async def send_quotes_by_topic(message: types.Message):
-    quote.preprocess_text(message.text)
-    quotes_and_authors_list = quote.basic_model()
-    final_message = '\n\n📝'.join(quote_ + '\n' + '© ' + author 
-                                   for quote_, author in quotes_and_authors_list)
-    await bot.send_message(message.from_user.id, '📝' + final_message,
+    await bot.send_message(message.from_user.id, '📝Привет',
                            reply_markup=kb.cancel_kb)
     await bot.send_message(message.from_user.id, 'Какая ещё тема тебя интересует? 👇',
                            reply_markup=kb.cancel_kb)
