@@ -69,6 +69,4 @@ class Quote:
     def end_of_quote(self, real_quote, guessed_quote):
 
         self.model.dv.n_similarity(real_quote, guessed_quote)
-
-quote = Quote('big_data.csv', 'pure_q_35k.csv', 
-              'd2v_35k_exp.model')
+        

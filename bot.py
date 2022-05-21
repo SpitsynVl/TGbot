@@ -9,8 +9,8 @@ from CLI import Quote
 
 bot = Bot(token='5159766100:AAGcbFAXDIuYzaiJVFfDgmoYYV9orNYUdj8')
 dp = Dispatcher(bot, storage=MemoryStorage())
-quote = Quote('big_data.csv', 'pure_q_35k.csv', 
-              'd2v_35k_exp.model')
+quote = Quote('data_model/big_data.csv', 'data_model/pure_q_35k.csv', 
+              'data_model/d2v_35k_exp.model')
 quote.Q_NUMBER = 5
 
 logging.basicConfig(level=logging.INFO)
