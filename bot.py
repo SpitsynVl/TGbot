@@ -3,7 +3,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
 import keyboards as kb
 import messages as msgs
-import calls_to_data as data
+from calls_to_data import take_random_quote, QuizCounter
 from CLI import Quote
 
 
@@ -12,6 +12,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 quote = Quote('data_model/big_data.csv', 'data_model/pure_q_35k.csv', 
               'data_model/d2v_35k_exp.model')
 quote.Q_NUMBER = 5
+quiz_counter = QuizCounter()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,24 +61,30 @@ async def start_quiz(message: types.Message):
     await dp.current_state(user=message.from_user.id).set_state('quiz')
     await bot.send_message(message.from_user.id, msgs.start_quiz, 
                            reply_markup=kb.cancel_kb)
-    quiz_quote, correct_author = data.take_random_quote()
+    quiz_quote, correct_author = take_random_quote()
+    quiz_counter.quiz_id += 1
     await bot.send_message(message.from_user.id, msgs.who_is_author + '📝' + quiz_quote, 
-                           reply_markup=kb.guess_author_kb(correct_author))
+                           reply_markup=kb.guess_author_kb(correct_author, quiz_counter.quiz_id))
 
 
 @dp.callback_query_handler(text='correct', state='quiz')
 @dp.callback_query_handler(text='wrong', state='quiz')
 async def check_quiz_answer(query: types.CallbackQuery):
-    answer = query.data
-    if answer == 'correct':
-        is_correct = '✅ Верно!\n\n'
+    answer, quiz_id = query.data[0], query.data[1]
+    if quiz_id != quiz_counter.quiz_id:
+        await bot.answer_callback_query(query.id, text='Ты уже отвечал на этот вопрос!',
+                                    show_alert=True) 
+
     else:
-        is_correct = '❌ Неправильно\n\n'
+        if answer == 'correct':
+            is_correct = '✅ Верно!\n\n'
+        else:
+            is_correct = '❌ Неправильно\n\n'
 
-    quiz_quote, correct_author = data.take_random_quote()
-
-    await bot.send_message(query.from_user.id, is_correct + msgs.who_is_author + '📝' +\
-                        quiz_quote, reply_markup=kb.guess_author_kb(correct_author))
+        quiz_quote, correct_author = take_random_quote()
+        quiz_counter.quiz_id += 1
+        await bot.send_message(query.from_user.id, is_correct + msgs.who_is_author + '📝' +\
+                            quiz_quote, reply_markup=kb.guess_author_kb(correct_author, quiz_counter.quiz_id))
 
 
 @dp.callback_query_handler(state='*')
