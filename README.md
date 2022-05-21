@@ -1,2 +1,2 @@
 # TGbot_deploy
-Private repository created created for deploying bot
+Private repository created for deploying bot
