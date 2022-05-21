@@ -28,6 +28,14 @@ async def command_help(message: types.Message):
 
 
 
+@dp.message_handler(state='quiz', regexp='🔙 Назад')
+async def cancel(message: types.Message):
+    await dp.current_state(user=message.from_user.id).reset_state()
+    await bot.send_message(message.from_user.id, f'Молодец! Количество правильных ответов: {quiz_counter.user_correct[message.from_user.id]}/{quiz_counter.user_quiz[message.from_user.id]}')
+    await bot.send_message(message.from_user.id, msgs.cancel_message,
+                           reply_markup=kb.start_kb)
+
+
 @dp.message_handler(state='*', regexp='🔙 Назад')
 async def cancel(message: types.Message):
     await dp.current_state(user=message.from_user.id).reset_state()
@@ -62,33 +70,35 @@ async def start_quiz(message: types.Message):
     await bot.send_message(message.from_user.id, msgs.start_quiz, 
                            reply_markup=kb.cancel_kb)
     quiz_quote, correct_author = take_random_quote()
-    quiz_counter.quiz_id += 1
+    quiz_counter.user_quiz[message.from_user.id] = 1
+    quiz_counter.user_correct[message.from_user.id] = 0
     await bot.send_message(message.from_user.id, msgs.who_is_author + '📝' + quiz_quote, 
-                           reply_markup=kb.guess_author_kb(correct_author, quiz_counter.quiz_id))
+                           reply_markup=kb.guess_author_kb(correct_author, 1))
 
 
-@dp.callback_query_handler(text='correct', state='quiz')
-@dp.callback_query_handler(text='wrong', state='quiz')
+@dp.callback_query_handler(state='quiz')
 async def check_quiz_answer(query: types.CallbackQuery):
-    answer, quiz_id = query.data[0], query.data[1]
-    if quiz_id != quiz_counter.quiz_id:
+    answer, quiz_id = query.data.split()[0], int(query.data.split()[1])
+    if quiz_id != quiz_counter.user_quiz[query.from_user.id]:
         await bot.answer_callback_query(query.id, text='Ты уже отвечал на этот вопрос!',
                                     show_alert=True) 
 
     else:
         if answer == 'correct':
             is_correct = '✅ Верно!\n\n'
+            quiz_counter.user_correct[query.from_user.id] += 1
         else:
             is_correct = '❌ Неправильно\n\n'
 
         quiz_quote, correct_author = take_random_quote()
-        quiz_counter.quiz_id += 1
+        quiz_counter.user_quiz[query.from_user.id] += 1
         await bot.send_message(query.from_user.id, is_correct + msgs.who_is_author + '📝' +\
-                            quiz_quote, reply_markup=kb.guess_author_kb(correct_author, quiz_counter.quiz_id))
+                            quiz_quote, reply_markup=kb.guess_author_kb(correct_author, quiz_counter.user_quiz[query.from_user.id]))
 
 
 @dp.callback_query_handler(state='*')
 async def incorrect_inline_behaviour(query: types.CallbackQuery):
+    print(quiz_counter.quiz_id)
     await bot.answer_callback_query(query.id, text='Ты уже вышел из Викторины',
                                     show_alert=True)
 

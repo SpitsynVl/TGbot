@@ -8,7 +8,7 @@ def take_random_quote():
     return [data.iloc[rand_num]['Цитата'], data.iloc[rand_num]['Автор']]
 
 
-class QuizCounter():
+class QuizCounter:
     def __init__(self):
-        self.correct_answers = 0
-        self.answers = 0
+        self.user_quiz = dict()
+        self.user_correct = dict()
